@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/1.5.3/jspdf.debug.js"></script>
+  <meta name="viewport" content="initial-scale=1.0, maximum-scale=1.0, user-scalable=1">
+  <link href='https://fonts.googleapis.com/css?family=Lobster' rel='stylesheet'>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous">
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz"
+    crossorigin="anonymous"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+  <title>File Convertor</title>
+  <style>
+    body {
+     
+      text-align: center;
+      padding: 20px;
+    }
+
+    body {
+      
+      font-family: Arial, Helvetica, sans-serif;
+      font-weight: bold;
+    }
+
+    @media (min-width: 991.98px) {
+      main {
+        padding-left: 240px;
+      }
+    }
+
+    .sidebar {
+      position: fixed;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      padding: 58px 0 0;
+      box-shadow: 0 2px 5px 0 rgb(0 0 0 / 5%), 0 2px 10px 0 rgb(0 0 0 / 5%);
+      width: 240px;
+      z-index: 600;
+    }
+
+    @media (max-width: 1018.98px) {
+      .sidebar {
+        width: 100%;
+      }
+    }
+
+    @media only screen and (min-width: 991.98px) {
+      #outer-section {
+        margin-left: 20%;
+      }
+    }
+
+    .sidebar .active {
+      border-radius: 5px;
+      box-shadow: 0 2px 5px 0 rgb(0 0 0 / 16%), 0 2px 10px 0 rgb(0 0 0 / 12%);
+    }
+
+    .sidebar-sticky {
+      position: relative;
+      top: 0;
+      height: calc(100vh - 48px);
+      padding-top: 0.5rem;
+      overflow-x: hidden;
+      overflow-y: auto;
+    }
+
+    .upload-file>input {
+      display: none;
+    }
+
+
+    table,
+    tr,
+    th,
+    td {
+      border: 1px solid black;
+    }
+  </style>
+
+  <script>
+
+    function load() {
+      document.getElementById('exportContent').style.display = "none";
+      document.getElementById('showImg').style.display = "none";
+      document.getElementById('pdfelement').style.display = "none";
+    }
+
+    function msword() {
+      document.getElementById('exportContent').style.display = "block";
+      document.getElementById('div1').style.display = "none";
+      document.getElementById('pdfelement').style.display = "none";
+    }
+
+    function imagepdf() {
+      document.getElementById('exportContent').style.display = "none";
+      document.getElementById('div1').style.display = "block";
+      document.getElementById('pdfelement').style.display = "none";
+
+    }
+
+    function htmlpdf() {
+      document.getElementById('exportContent').style.display = "none";
+      document.getElementById('div1').style.display = "none";
+      document.getElementById('pdfelement').style.display = "block";
+    }
+
+
+    function Export2Doc(element, filename = '') {
+      var meta = "Mime-Version: 1.0\nContent-Base: " + location.href + "\nContent-Type: Multipart/related; boundary=\"NEXT.ITEM-BOUNDARY\";type=\"text/html\"\n\n--NEXT.ITEM-BOUNDARY\nContent-Type: text/html; charset=\"utf-8\"\nContent-Location: " + location.href + "\n\n<!DOCTYPE html>\n<html>\n_html_</html>";
+      var head = "<head>\n<meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\">\n<style>\n_styles_\n</style>\n</head>\n";
+      var html = document.getElementById(element).innerHTML;
+      var blob = new Blob(['\ufeff', html], {
+        type: 'application/msword'
+      });
+      var css = (
+        '<style>' +
+        'img {width:300px;}table {border-collapse: collapse; border-spacing: 0;}td{padding: 6px;}' +
+        '</style>'
+      );
+      var optionsThird = { maxWidth: 624 };
+      var imagesThird = Array();
+      var img = $("#" + element).find("img");
+      for (var i = 0; i < img.length; i++) {
+        var w = Math.min(img[i].width, optionsThird.maxWidth);
+        var h = img[i].height * (w / img[i].width);
+        var canvas = document.createElement("CANVAS");
+        canvas.width = w;
+        canvas.height = h;
+        var context = canvas.getContext('2d');
+        context.drawImage(img[i], 0, 0, w, h);
+        var uri = canvas.toDataURL("image/png");
+        $(img[i]).attr("src", img[i].src);
+        img[i].width = w;
+        img[i].height = h;
+        imagesThird[i] = {
+          type: uri.substring(uri.indexOf(":") + 1, uri.indexOf(";")),
+          encoding: uri.substring(uri.indexOf(";") + 1, uri.indexOf(",")),
+          location: $(img[i]).attr("src"),
+          data: uri.substring(uri.indexOf(",") + 1)
+        };
+      }
+      var imgMetaData = "\n";
+      for (var i = 0; i < imagesThird.length; i++) {
+        imgMetaData += "--NEXT.ITEM-BOUNDARY\n";
+        imgMetaData += "Content-Location: " + imagesThird[i].location + "\n";
+        imgMetaData += "Content-Type: " + imagesThird[i].type + "\n";
+        imgMetaData += "Content-Transfer-Encoding: " + imagesThird[i].encoding + "\n\n";
+        imgMetaData += imagesThird[i].data + "\n\n";
+      }
+      imgMetaData += "--NEXT.ITEM-BOUNDARY--";
+      // end Image Area %%
+
+      var output = meta.replace("_html_", head.replace("_styles_", css) + html) + imgMetaData;
+      var url = 'data:application/vnd.ms-word;charset=utf-8,' + encodeURIComponent(output);
+      filename = filename ? filename + '.doc' : 'document.doc';
+      var downloadLink = document.createElement("a");
+
+      document.body.appendChild(downloadLink);
+
+      if (navigator.msSaveOrOpenBlob) {
+        navigator.msSaveOrOpenBlob(blob, filename);
+      } else {
+
+        downloadLink.href = url;
+        downloadLink.download = filename;
+        downloadLink.click();
+      }
+      document.body.removeChild(downloadLink);
+    }
+
+    var newImage, showImg;
+    function loadFile(event) {
+      showImg = document.getElementById('showImg');
+      showImg.src = URL.createObjectURL(event.target.files[0]);
+
+      newImage = document.createElement('img');
+      newImage.src = URL.createObjectURL(event.target.files[0]);
+      document.getElementById('showImg').style.display = "block";
+      showImg.onload = function () {
+        URL.revokeObjectURL(showImg.src) // free memory
+      }
+    };
+
+    function pdfDown() {
+      document.getElementById('showImg').style.visibility = "visible";
+      console.log(newImage)
+      var doc = new jsPDF();
+      doc.addImage(newImage, 10, 10);
+      doc.save('ImgToPDF.pdf')
+    }
+
+    function pdf12() {
+      const element = document.getElementById('test');
+      html2pdf()
+        .from(element)
+        .save();
+    }
+  </script>
+</head>
+
+<body onload="load()">
+  <header>
+    <nav id="sidebarMenu" class="collapse d-lg-block sidebar collapse bg-dark" style="z-index: 1;">
+      <div class="position-sticky  bg-dark">
+        <div class="list-group list-group-flush mx-3" >
+          <p class="list-group-item list-group-item-action ripple bg-dark text-white">
+            <img width="60%" style="margin:-45% 0% 0% -1%;" id="logo"
+              src="https://media.licdn.com/dms/image/C4D0BAQFVBPbc6-yxoA/company-logo_200_200/0/1677167040157?e=2147483647&v=beta&t=GlZL2PZg5L1x5tzCMMMIHseNt2V_SWxmGKLh8DbtlbU">
+          </p>
+          <span style="margin-top: 20px;"></span>
+          <a href="#about" id="sidenav" onclick="imagepdf()"
+            class="list-group-item list-group-item-action ripple bg-dark text-white" >
+            Image to PDF <br>
+            <img width="45%" class="ms-auto"
+              src="https://s.smallpdf.com/static/cms/f/102628/300x180/0cf4630611/bb46b97de13eb9b590de.svg">
+          </a>
+          <br>
+          <a href="#quick1" id="sidenav" onclick="msword()"
+            class="list-group-item list-group-item-action ripple  bg-dark text-white">
+            HTML Page To Documents <br><br>
+            <button onclick="Export2Doc('exportContent');" width="87%" class="btn fw-bold btn-primary d-flex"
+              style="font-size: 15px;">Convert To Word
+              <img width="25%" class="ms-auto" style="background-color: white;"
+                src="https://w7.pngwing.com/pngs/566/951/png-transparent-microsoft-word-logo-microsoft-word-microsoft-office-2013-microsoft-excel-computer-software-office-template-blue-angle.png">
+            </button>
+            <br>
+            <center><button class="btn fw-bold btn-danger d-flex" style="width:87%; font-size:15px"
+                onclick="pdf12()">Convert To <br>Pdf
+                <img width="28%" class="ms-auto" style="background-color: white;"
+                  src="https://www.citypng.com/public/uploads/preview/pdf-file-document-red-icon-png-11664499159d22efvkxoy.png">
+              </button>
+            </center>
+            <br>
+          </a>
+          <hr>
+        </div>
+
+      </div>
+      <div class="d-flex">
+        <button class="btn fixed-bottom fw-bold"
+          style="width:8%; margin: 0% 0% 3% 4%; background-color: red;color:white"
+          onclick="location.reload();">Reset&nbsp;&nbsp;
+          <img width="30%" class="ms-auto" style="float:right;border-radius: 100px;"
+            src="https://e7.pngegg.com/pngimages/434/162/png-clipart-red-and-white-button-logo-push-button-scalable-graphics-red-power-button-symbol-icon-miscellaneous-trademark-thumbnail.png">
+        </button>
+      </div>
+    </nav>
+  </header>
+
+  <div id="outer-section">
+
+    <div class="container" id="div1" >
+      <div class="upload-file" style="border: 7px solid purple; border-radius: 30px;">
+        <label for="file-input" >
+          <img style="cursor: pointer; width:40%"
+            src="https://www.zinatt.com/wp-content/uploads/2020/12/Upload-Files.png">
+        </label>
+        <input id="file-input" type="file" onChange="loadFile(event)" name="" accept=".png, .jpg, .jpeg" multiple><br>
+        <h4 class="fw-bold">Upload File</h4>
+        <center><img id="showImg"  src="imagesThird/img.png" style="width:500px; height:400px; object-fit: pixelated;"></center><br>
+      </div>
+      <br>
+      <button onClick="pdfDown()" class="btn btn-primary fw-bold">Image To PDF</button>
+    </div>
+
+    <div id="exportContent"
+      style="position: absolute; left: 20%; top:5%; right:10%; font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;">
+      <div class="card">
+
+
+        <div id="test"> <br>
+          <h1 class="fw-bold"> Code Alpha</h1>
+          <p align="left" style="padding:2% 5% 5% 5%; font-size: 18px;">
+            Code Alpha is an organization that helps the needy student by giving internship into their related fields
+            and domain.
+
+            Code Alpha also provide the best Android and Web Designing services and even provide internships for college
+            freshers in
+            Web Development, Android Development and Graphics Designing. This is very important as internship programs
+            provide comprehensive
+            experience and knowledge to the students, giving them real and relevant work experience.<br><br>
+
+            <b >𝗪𝗲𝗯 𝗗𝗲𝘃𝗲𝗹𝗼𝗽𝗺𝗲𝗻𝘁:-</b> In web development, you learn how to build
+            websites and web apps. This includes HTML, CSS, JavaScript, frameworks such as
+            React or Angular, and server-side scripting.<br><br>
+
+            <b >𝗔𝗻𝗱𝗿𝗼𝗶𝗱 𝗗𝗲𝘃𝗲𝗹𝗼𝗽𝗺𝗲𝗻𝘁:-</b> In Android development, you learn
+            programming for Android apps and features. You can use different options in it, such
+            as Java, Kotlin or React Native. There is a great demand for Android development experts and it can provide
+            you a great career opportunity.<br><br>
+
+            <b >𝗚𝗿𝗮𝗽𝗵𝗶𝗰 𝗗𝗲𝘀𝗶𝗴𝗻𝗶𝗻𝗴:-</b> We are a high quality graphic designing
+            company that helps create innovative designs and visuals to beautify business and
+            brand products. We provide branding, logo design, packaging design, brochure design, website design, social
+            media graphics and other creative
+            design services to international and national clients.
+          </p>
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+</body>
+
+</html>
