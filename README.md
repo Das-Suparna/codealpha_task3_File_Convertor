@@ -1,2 +1,3 @@
-# codealpha_task3_File_Convertor
-#Task 3 #Level 3 Webdevelopment Code Alpha  File Convertor - Suparna Das
+# Code Alpha Task 3 File Convertor
+# SUPARNA DAS
+# Level 3 Web Development Intern at Code Alpha  
